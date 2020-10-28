@@ -1,0 +1,49 @@
+version: '3.3'
+
+networks:
+  citystats_default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.0.0/24
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: 'cities_db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - my-db:/var/lib/mysql
+    networks:
+      citystats_default:
+        ipv4_address: 172.23.0.2
+  rabbitmq:
+    image: 'rabbitmq'
+    networks:
+      citystats_default:
+        ipv4_address: 172.23.0.4
+    ports:
+      - '5672:5672'
+    expose:
+      - '5672'
+  citystats:
+    build: .
+    ports:
+      - 8080:8080
+    expose:
+      - '8080'
+    networks:
+      citystats_default:
+        ipv4_address: 172.23.0.3
+volumes:
+  my-db:
